@@ -27,10 +27,34 @@ class Posts extends RestController
 		$this->load->view('posts/create');
 	}
 
+	public function create_post()
+	{
+		$token = $this->input->get_request_header('X-Token');
+		$user = $this->User->get_user($token);
+		if (!$user) {
+			$this->response([
+				'status' => FALSE,
+				'message' => 'Unauthorized'
+			], 401);
+			return;
+		}
+
+		$category = $this->input->post('category');
+		$tags = $this->input->post('tags');
+		$keywords = $this->input->post('keywords');
+		$title = $this->input->post('title');
+		$content = $this->input->post('content');
+		$attachments = $this->input->post('attachments');
+		$parent = $this->input->post('parent');
+
+		$result = $this->Post->create_post($user, $category, $tags, $keywords, $title, $content, $attachments, $parent);
+		echo json_encode($result);
+	}
+
 	public function categories_get()
 	{
-		$categories = $this->Post->get_categories();
 		$token = $this->input->get_request_header('X-Token');
+		$categories = $this->Post->get_categories($token);
 		if (!empty($token)) {
 			$user = $this->User->get_user($token);
 			if ($user) {
@@ -43,12 +67,17 @@ class Posts extends RestController
 					}
 					$categories = $filtered;
 				}
-				echo json_encode($categories);
 			} else {
-				$this->response(['error' => 'Unauthorized'], 401);
+				$categories = NULL;
 			}
-		} else {
+		}
+		if ($categories) {
 			echo json_encode($categories);
+		} else {
+			$this->response([
+				'status' => FALSE,
+				'message' => 'Unauthorized'
+			], 401);
 		}
 	}
 

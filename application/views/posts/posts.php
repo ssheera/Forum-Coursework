@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<?php $this->load->view('head', ['title' => 'Home']); ?>
-	<body>
+	<body class="mb-5">
 		<?php $this->load->view('nav', ['page' => 'home']); ?>
 		<script>
 			if (localStorage.getItem('token')) {
@@ -24,7 +24,7 @@
 			<div class="container rounded-2 rounded-bottom-0" style="background: #F0F0F0">
 				<h6 id="category" class="text-dark text-capitalize fw-semibold py-2 m-0"></h6>
 			</div>
-			<div id="posts" class="container overflow-auto bg-secondary bg-opacity-25 rounded-2 rounded-top-0 h-auto px-0" style="max-height: 400px;">
+			<div id="posts" class="container overflow-auto bg-secondary bg-opacity-25 rounded-2 rounded-top-0 h-auto px-0" style="max-height: 300px;">
 				<div id="post" class="border-0 h-auto p-2 bg-gradient visually-hidden" style="cursor: pointer">
 					<p id="title" class="text-dark fw-bold m-0 ps-3"></p>
 					<p id="author" class="text-dark fst-italic m-0 ps-3" style="font-size: 0.9rem"></p>

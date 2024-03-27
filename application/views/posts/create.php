@@ -49,23 +49,24 @@
 							</div>
 						</div>
 						<div class="col-3">
-							<div class="ms-4">
-								<p class="text-secondary fw-bold">Attachments</p>
-								<div id="attachments-block" class="d-flex flex-column overflow-auto pe-3 gap-3">
-									<!-- outlined box -->
-									<div id="attachment-0" class="col-12 rounded-3" style="min-height: 70px; background-color: #f9f9f9">
+							<div class="ms-3">
+								<p class="text-secondary fw-bold p-3">Attachments</p>
+								<div id="attachments-block" class="d-flex flex-column overflow-auto p-3 pt-1 gap-3" style="min-height:296px; max-height: 296px">
+									<div id="attachment" class="col-12 rounded-3 visually-hidden shadow" style="min-height: 70px; background-color: #f9f9f9">
 										<div class="d-flex flex-row">
 											<div class="col-9">
 												<div class="m-2">
-													<p class="text-start text-dark text-truncate mb-0">template.pdf</p>
-													<p class="text-start text-secondary mb-0">1.2 MB</p>
+													<p id="name" class="text-start text-dark text-truncate mb-0">template.pdf</p>
+													<p id="size" class="text-start text-secondary mb-0">1.2 MB</p>
 												</div>
 											</div>
 											<div class="col-3">
 												<div class="float-end">
-													<button class="btn">
+													<button id="remove" class="btn border-0 visually-hidden">
 														<i class="fa-solid fa-xmark fa-2xs bg-transparent"></i>
 													</button>
+													<div id="uploading" class="spinner-border spinner-border-sm text-theme m-2" role="status">
+													</div>
 												</div>
 											</div>
 										</div>
@@ -112,6 +113,86 @@
 				});
 			}
 
+			function setupButtons() {
+				$('#upload').click(function() {
+
+					let fileInput = $('<input type="file" class="attachment-upload visually-hidden" />');
+					$('body').append(fileInput);
+					fileInput.click();
+
+					fileInput.change(async function() {
+						let file = fileInput.prop('files')[0];
+						let attachment = $('#attachment').clone();
+						attachment.removeAttr('id');
+						attachment.find('#name').text(file.name);
+						attachment.find('#size').text(`${(file.size / 1024).toFixed(2)} KB`);
+						attachment.removeClass('visually-hidden');
+						attachment.find('#remove').click(function() {
+							attachment.remove();
+							fileInput.remove();
+						});
+						$('#attachments-block').append(attachment);
+
+						file.data = await file.arrayBuffer();
+						attachment.find('#uploading').addClass('visually-hidden');
+						attachment.find('#remove').removeClass('visually-hidden');
+
+					});
+				});
+				$('#submit').click(function() {
+					const localStorage = window.localStorage;
+					const token = localStorage.getItem('token');
+					const category = $('#category').val();
+					const tags = $('#tags').val();
+					const keywords = $('#keywords').val();
+					const title = $('#title').val();
+					const content = $('#content').val();
+					const attachments = [];
+					$('.attachment-upload').each(function () {
+						const file = $(this).prop('files')[0];
+						const buffer = new Uint8Array(file.data);
+						const hex = Array.from(buffer).map(function(byte) {
+							return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+						}).join('');
+						let data = {
+							name: file.name,
+							size: file.size,
+							data: hex
+						}
+						attachments.push(data);
+					});
+					$.ajax({
+						url: '<?= base_url('/posts/create') ?>',
+						type: 'POST',
+						headers: {
+							'X-Token': token
+						},
+						data: {
+							category: category,
+							tags: tags,
+							keywords: keywords,
+							title: title,
+							content: content,
+							attachments: attachments
+						},
+						success: function(response) {
+							response = $.parseJSON(response);
+							if (response.status) {
+								window.location.href = '/posts/view/' + response.id;
+							} else {
+								alert(response.message);
+							}
+						},
+						error: function(response) {
+							if (response.status === 401) {
+								localStorage.removeItem('token');
+								window.location.href = '<?= base_url('/auth/login') ?>';
+							}
+						}
+					});
+				})
+			}
+
 			$(document).ready(function() {
 				const localStorage = window.localStorage;
 				const token = localStorage.getItem('token');
@@ -121,6 +202,7 @@
 				}
 				loadCategories(token);
 				loadInputs();
+				setupButtons();
 			});
 		</script>
 	</body>

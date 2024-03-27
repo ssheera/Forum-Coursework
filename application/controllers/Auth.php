@@ -25,7 +25,8 @@ class Auth extends RestController {
 		$username = $this->input->post('username');
 		$password = $this->input->post('password');
 
-		echo $this->User->login($username, $password);
+		$response = $this->User->login($username, $password);
+		echo json_encode($response);
 	}
 
     public function register_get()
@@ -40,7 +41,8 @@ class Auth extends RestController {
 		$email = $this->input->post('email');
 		$password = $this->input->post('password');
 
-		echo $this->User->register($username, $email, $password);
+		$response = $this->User->register($username, $email, $password);
+		echo json_encode($response);
 	}
 
 	public function logout_get()

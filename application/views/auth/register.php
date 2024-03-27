@@ -39,24 +39,6 @@
 					let username = $('#username').val();
 					let email = $('#email').val();
 					let password = $('#password').val();
-
-					if (username.length < 3) {
-						alert('Username must be at least 3 characters');
-						return;
-					}
-
-					if (password.length < 5) {
-						alert('Password must be at least 5 characters');
-						return;
-					}
-
-					let emailRegex = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
-
-					if (!emailRegex.test(email)) {
-						alert('Invalid email address');
-						return;
-					}
-
 					$.ajax({
 						url: '<?= '/auth/register' ?>',
 						type: 'POST',

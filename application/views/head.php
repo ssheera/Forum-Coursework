@@ -15,6 +15,9 @@
 			background: #FAFAFA;
 			--bs-dark-rgb = #090909;
 		}
+		.text-theme {
+			color: #ed8106;
+		}
 		.bg-theme {
 			background: #ed8106;
 		}
