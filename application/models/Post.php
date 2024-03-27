@@ -68,7 +68,7 @@ class Post extends CI_Model
 		}
 
 		if (!$user->staff) {
-			if ($cat->locked) {
+			if ($cat['locked']) {
 				return ['status' => FALSE, 'message' => 'Category is locked'];
 			}
 		}
@@ -88,20 +88,26 @@ class Post extends CI_Model
 		$this->db->insert('posts', $data);
 		$id = $this->db->insert_id();
 
-		for ($i = 0; $i < count($attachments); $i++) {
-			$attachment = $attachments[$i];
-			$attachment['post'] = $id;
+		if (is_array($attachments)) {
+			try {
+				for ($i = 0; $i < count($attachments); $i++) {
+					$attachment = $attachments[$i];
+					$attachment['post'] = $id;
 
-			$fileName = md5(uniqid(rand(), true));
-			$directory = 'public/' . md5(uniqid(rand(), true));
-			$attachment['path'] = $directory . '/' . $fileName;
-			$hex = $attachment['data'];
-			$data = hex2bin($hex);
-			unset($attachment['data']);
-			$this->db->insert('attachments', $attachment);
+					$fileName = md5(uniqid(rand(), true));
+					$directory = 'public/' . md5(uniqid(rand(), true));
+					$attachment['path'] = $directory . '/' . $fileName;
+					$hex = $attachment['data'];
+					$data = hex2bin($hex);
+					unset($attachment['data']);
+					$this->db->insert('attachments', $attachment);
 
-			if (!file_exists($directory)) mkdir($directory, 0777, TRUE);
-			file_put_contents($attachment['path'], $data);
+					if (!file_exists($directory)) mkdir($directory, 0777, TRUE);
+					file_put_contents($attachment['path'], $data);
+				}
+			} catch (Exception $e) {
+				// Leave it
+			}
 		}
 
 		return ['status' => TRUE, 'id' => $id];

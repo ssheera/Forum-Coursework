@@ -132,7 +132,6 @@
 							fileInput.remove();
 						});
 						$('#attachments-block').append(attachment);
-
 						file.data = await file.arrayBuffer();
 						attachment.find('#uploading').addClass('visually-hidden');
 						attachment.find('#remove').removeClass('visually-hidden');
@@ -150,6 +149,7 @@
 					const attachments = [];
 					$('.attachment-upload').each(function () {
 						const file = $(this).prop('files')[0];
+						if (!file) return;
 						const buffer = new Uint8Array(file.data);
 						const hex = Array.from(buffer).map(function(byte) {
 							return ('0' + (byte & 0xFF).toString(16)).slice(-2);
