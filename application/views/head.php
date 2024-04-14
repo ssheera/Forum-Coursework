@@ -11,9 +11,14 @@
 	<style>
 		body {
 			color: #090909;
-			font-family: 'Hind', sans-serif;
+			font-family: 'Candara', sans-serif;
 			background: #FAFAFA;
 			--bs-dark-rgb = #090909;
+			display: flex;
+			flex-direction: column;
+		}
+		.nav-link.text-dark:hover {
+			color: #ed8106 !important;
 		}
 		.text-theme {
 			color: #ed8106;

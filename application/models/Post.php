@@ -16,9 +16,15 @@ class Post extends CI_Model
 		return $result->result_array();
 	}
 
-	function get_posts($category_id)
+	function get_posts($category_id, $f_author, $f_category)
 	{
 		$this->db->where('category', $category_id);
+
+		if ($f_author)
+			$this->db->where('author', $f_author);
+		if ($f_category)
+			$this->db->where('category', $f_category);
+
 		$this->db->order_by('updated', 'DESC');
 		$result = $this->db->get('posts');
 
@@ -50,11 +56,64 @@ class Post extends CI_Model
 		return $posts;
 	}
 
-	function create_post($user, $category, $tags, $keywords, $title, $content, $attachments, $parent)
+	function get_post($user, $post_id)
 	{
+
+		$this->db->where('id', $post_id);
+		$result = $this->db->get('posts');
+
+		if ($result->num_rows() == 0) {
+			return NULL;
+		}
+
+		$post = $result->row();
+
+		$this->db->select('username');
+		$this->db->where('id', $post->author);
+		$results = $this->db->get('user');
+		if ($results->num_rows() == 0) {
+			$author = 'unknown';
+		} else {
+			$author = $results->row()->username;
+		}
+
+		$category = $this->db->get_where('category', ['id' => $post->category])->row();
+
+		$replies = [];
+
+		$this->db->where('parent', $post_id);
+		$this->db->order_by('created', 'ASC');
+		$results = $this->db->get('posts');
+
+		for ($i = 0; $i < $results->num_rows(); $i++) {
+			$reply = $results->row($i);
+			$replies[] = $this->get_post($user, $reply->id);
+		}
+
+		return [
+			'id' => $post->id,
+			'category' => $post->category,
+			'title' => $post->title,
+			'author' => $post->author,
+			'content' => base64_decode($post->content),
+			'username' => $author,
+			'updated' => $post->updated,
+			'parent' => $post->parent,
+			'replies' => $replies,
+			'reply' => !$category->locked,
+			'action' => $user && ($user->staff || $post->author == $user->id),
+			'attachments' => $this->get_attachments($post_id)
+		];
+	}
+
+	function create_post($user, $category, $tags, $keywords, $title, $content, $parent)
+	{
+
 		if (empty($category) || empty($title) || empty($content)) {
 			return ['status' => FALSE, 'message' => 'Missing required fields'];
 		}
+
+		$content = base64_encode($content);
 
 		$uid = $user->id;
 		$now = date('Y-m-d H:i:s');
@@ -62,7 +121,12 @@ class Post extends CI_Model
 		$categories = $this->get_categories();
 
 		try {
-			$cat = $categories[$category - 1];
+			for ($i = 0; $i < count($categories); $i++) {
+				if ($categories[$i]['id'] == $category) {
+					$cat = $categories[$i];
+					break;
+				}
+			}
 		} catch (Exception $e) {
 			return ['status' => FALSE, 'message' => 'Invalid category'];
 		}
@@ -82,34 +146,84 @@ class Post extends CI_Model
 			'parent' => $parent,
 			'created' => $now,
 			'updated' => $now,
-			'edited' => $now
+			'edited' => $now,
 		];
 
 		$this->db->insert('posts', $data);
 		$id = $this->db->insert_id();
 
-		if (is_array($attachments)) {
-			try {
-				for ($i = 0; $i < count($attachments); $i++) {
-					$attachment = $attachments[$i];
-					$attachment['post'] = $id;
+		return ['status' => TRUE, 'id' => $id];
+	}
 
-					$fileName = md5(uniqid(rand(), true));
-					$directory = 'public/' . md5(uniqid(rand(), true));
-					$attachment['path'] = $directory . '/' . $fileName;
-					$hex = $attachment['data'];
-					$data = hex2bin($hex);
-					unset($attachment['data']);
-					$this->db->insert('attachments', $attachment);
+	function delete_post($user, $post_id) {
+		$this->db->where('id', $post_id);
+		$result = $this->db->get('posts');
 
-					if (!file_exists($directory)) mkdir($directory, 0777, TRUE);
-					file_put_contents($attachment['path'], $data);
-				}
-			} catch (Exception $e) {
-				// Leave it
-			}
+		if ($result->num_rows() == 0) {
+			return ['status' => FALSE, 'message' => 'Post not found'];
 		}
 
-		return ['status' => TRUE, 'id' => $id];
+		$post = $result->row();
+
+		if ($post->author != $user->id && !$user->staff) {
+			return ['status' => FALSE, 'message' => 'Unauthorized'];
+		}
+
+		$this->db->where('parent', $post_id);
+		$replies = $this->db->get('posts');
+		for ($i = 0; $i < $replies->num_rows(); $i++) {
+			$reply = $replies->row($i);
+			$this->db->where('id', $reply->id);
+			$this->db->update('posts', ['parent' => $post->parent]);
+		}
+
+		$this->db->where('post', $post_id);
+		$attachments = $this->db->get('attachments');
+
+		for ($i = 0; $i < $attachments->num_rows(); $i++) {
+			$attachment = $attachments->row($i);
+			if (file_exists($attachment->path))
+				unlink($attachment->path);
+		}
+
+		$this->db->where('id', $post_id);
+		$this->db->delete('posts');
+
+		return ['status' => TRUE];
+	}
+
+	function get_attachments($post_id) {
+		$this->db->where('post', $post_id);
+		$result = $this->db->get('attachments');
+		$attachments = [];
+		for ($i = 0; $i < $result->num_rows(); $i++) {
+			$attachment = $result->row($i);
+			$attachments[] = [
+				'name' => $attachment->name,
+				'size' => $attachment->size,
+				'path' => $attachment->path
+			];
+		}
+		return $attachments;
+	}
+
+	function create_attachment($post_id, $name, $size, $data) {
+
+		$path = 'public/' . md5(uniqid(rand(), true));
+
+		while (file_exists($path)) {
+			$path = 'public/' . md5(uniqid(rand(), true));
+		}
+
+		$data = base64_decode($data);
+		$data = hex2bin($data);
+		$this->db->insert('attachments', [
+			'post' => $post_id,
+			'name' => $name,
+			'size' => $size,
+			'path' => $path
+		]);
+
+		file_put_contents($path, $data);
 	}
 }

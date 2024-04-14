@@ -20,7 +20,7 @@
 				<button id="searchButton" class="px-2 py-0 m-0 btn btn-light border-0 rounded-3 rounded-start-0"><i class="fas fa-search"></i></button>
 			</div>
 		</div>
-		<div id="posts-block" class="post-block container visually-hidden w-50" style="margin-top: 3rem">
+		<div id="posts-block" class="post-block container visually-hidden" style="margin-top: 3rem; width: 60rem">
 			<div class="container rounded-2 rounded-bottom-0" style="background: #F0F0F0">
 				<h6 id="category" class="text-dark text-capitalize fw-semibold py-2 m-0"></h6>
 			</div>
@@ -40,30 +40,33 @@
 				$.ajax({
 					url: '/posts/categories',
 					type: 'GET',
-					success: function(data) {
+					success: async function (data) {
 						data = $.parseJSON(data);
-						data.forEach(function(category) {
-							$.ajax({
-								url: '/posts/fetch/' + category.id,
+						for (let category of data) {
+
+							let block = $('#posts-block')
+								.clone()
+								.removeClass('visually-hidden')
+								.attr('id', 'posts-block-' + category.id);
+							block.find('#category').text(category.name);
+
+							await $.ajax({
+								url: '/posts/category/' + category.id,
 								type: 'GET',
-								success: function(data) {
+								headers: {
+									'X-Token': localStorage.getItem('token'),
+									<?php if (isset($author)) echo "'F-Author': '$author',"; ?>
+									<?php if (isset($category)) echo "'F-Category': '$category',"; ?>
+								},
+								success: function (data) {
 									data = $.parseJSON(data);
 									if (data.length === 0) return;
-									let cat_counter = 0;
-									let block = $('#posts-block')
-										.clone()
-										.appendTo('body')
-										.removeClass('visually-hidden')
-										.attr('id', 'posts-block-' + category.id);
-									block.find('#category').text(category.name);
-									if (cat_counter++ === 0) {
-										block.css('margin-top', '6rem');
-									} else if (cat_counter === data.length) {
-										block.css('margin-bottom', '3rem');
-									}
+									block.appendTo('body');
 									let post_counter = 0;
-									data.forEach(function(post) {
-										if (post.parent !== null) return;
+									data.forEach(function (post) {
+										<?php if (!isset($author) && !isset($category)) { ?>
+											if (post.parent !== null) return;
+										<?php } ?>
 										let postBlock = block.find('#post')
 											.clone()
 											.appendTo(block.find('#posts'))
@@ -73,7 +76,7 @@
 										postBlock.find('#author').text('by ' + post.author);
 										postBlock.find('#replies').text(post.replies + ' replies');
 										postBlock.find('#updated').text(post.updated);
-										postBlock.click(function() {
+										postBlock.click(function () {
 											window.location.href = '/posts/view/' + post.id;
 										})
 										if (post_counter++ % 2 === 0) {
@@ -84,7 +87,7 @@
 									})
 								}
 							})
-						});
+						}
 					}
 				});
 			})
