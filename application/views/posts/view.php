@@ -2,7 +2,10 @@
 <html lang="en">
 	<?php $this->load->view('head', ['title' => 'Viewing Post']); ?>
 	<body>
-		<?php $this->load->view('nav', ['page' => 'View']); ?>
+		<?php $this->load->view('nav'); ?>
+
+		<div id="root"></div>
+
 		<script>
 			if (localStorage.getItem('token')) {
 				document.write(`

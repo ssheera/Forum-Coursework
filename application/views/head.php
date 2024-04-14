@@ -3,15 +3,21 @@
 	<title><?php echo $title?></title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-	<link href="https://fonts.googleapis.com/css?family=Hind:100,200,300,400,600,700" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Hind:wght@100,200,300,400,600,700" rel="stylesheet">
+
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 	<script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 	<script src="https://kit.fontawesome.com/c69c998a65.js" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.4/babel.min.js"></script>
+
 	<style>
 		body {
 			color: #090909;
-			font-family: 'Candara', sans-serif;
+			font-family: 'Hind', sans-serif;
 			background: #FAFAFA;
 			--bs-dark-rgb = #090909;
 			display: flex;
@@ -46,7 +52,4 @@
 			border-color: #ed8106;
 		}
 	</style>
-	<script>
-		let loggedIn = localStorage.getItem('token');
-	</script>
 </head>

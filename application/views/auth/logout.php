@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 	<?php $this->load->view('head', ['title' => 'Logout']); ?>
-	<body class="bg-dark bg-opacity-75">
-		<?php $this->load->view('nav', ['page' => 'logout']); ?>
+	<body>
+		<?php $this->load->view('nav'); ?>
 	</body>
 
 	<script>

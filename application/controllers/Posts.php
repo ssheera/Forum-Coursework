@@ -98,8 +98,8 @@ class Posts extends RestController
 		$token = $this->input->get_request_header('X-Token');
 		$user = $this->User->get_user($token);
 
-		$f_author = $this->input->get_request_header('F-Author');
-		$f_category = $this->input->get_request_header('F-Category');
+		$f_author = $this->input->get_request_header('X-Filter-Author');
+		$f_category = $this->input->get_request_header('X-Filter-Category');
 
 		if ($f_author && $f_author == 'self') {
 			if ($user) {
