@@ -13,22 +13,24 @@
 				render() {
 
 					function handleSubmit() {
-						let username = document.getElementById('username').value;
-						let email = document.getElementById('email').value;
-						let password = document.getElementById('password').value;
-						fetch('/auth/register', {
-							method: 'POST',
-							headers: {
-								'Content-Type': 'application/x-www-form-urlencoded'
+						const username = $('#username').val();
+						const email = $('#email').val();
+						const password = $('#password').val();
+						$.ajax({
+							url: <?= base_url('/auth/register') ?>,
+							type: 'POST',
+							data: {
+								username: username,
+								email: email,
+								password: password
 							},
-							body: `username=${username}&email=${email}&password=${password}`
-						})
-						.then(response => response.json())
-						.then(data => {
-							if (data.status) {
-								window.location.href = '<?= base_url('/auth/login') ?>';
-							} else {
-								alert(data.message);
+							success: function(response) {
+								response = $.parseJSON(response);
+								if (response.status) {
+									window.location.href = '<?= base_url('/auth/login') ?>';
+								} else {
+									alert(response.message);
+								}
 							}
 						});
 					}
