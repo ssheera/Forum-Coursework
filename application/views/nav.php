@@ -1,4 +1,3 @@
-<?php $page = isset($page) ? $page : ''; ?>
 <div id="nav"></div>
 
 <script type="text/babel">

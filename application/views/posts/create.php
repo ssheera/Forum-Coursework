@@ -2,7 +2,7 @@
 <html lang="en">
 	<?php $this->load->view('head', ['title' => 'Create a Post']); ?>
 	<body>
-		<?php $this->load->view('nav', ['page' => 'create']); ?>
+		<?php $this->load->view('nav'); ?>
 		<div id="root"></div>
 	</body>
 

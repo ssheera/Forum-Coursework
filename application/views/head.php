@@ -13,7 +13,20 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.4/babel.min.js"></script>
-	<script src="<?= base_url('public/js/helper.js') ?>"></script>
+
+	<script>
+		function get_segments() {
+			const path = window.location;
+			const segments = path.pathname.split('/');
+			const mapped = {};
+			for (let i = segments.length & 1; i < segments.length; i += 2) {
+				mapped[segments[i].toLowerCase()] = segments[i + 1];
+			}
+			return mapped;
+		}
+
+		const uri = get_segments();
+	</script>
 
 	<style>
 		body {
