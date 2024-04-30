@@ -16,7 +16,7 @@
 					const username = $('#username').val();
 					const password = $('#password').val();
 					$.ajax({
-						url: <?= base_url('/auth/login') ?>,
+						url: '<?= base_url('/auth/login') ?>',
 						type: 'POST',
 						data: {
 							username: username,
