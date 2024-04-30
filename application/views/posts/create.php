@@ -3,92 +3,34 @@
 	<?php $this->load->view('head', ['title' => 'Create a Post']); ?>
 	<body>
 		<?php $this->load->view('nav', ['page' => 'create']); ?>
-		<div class="container mt-5 mb-5">
-			<div role="form" class="card mt-5 mx-5 rounded-4 shadow border-0">
-				<div class="card-header bg-white border-bottom-0 rounded-4">
-					<h4 class="card-title text-secondary mx-2 mt-3 fw-bold">Create a Post</h4>
-				</div>
-				<div class="card-body mx-2">
-					<div class="d-flex flex-row">
-						<div class="col-9">
-							<div class="me-4">
-								<?php if (!$reply) { ?>
-									<div class="d-flex flex-row">
-										<div class="col-6">
-											<div class="form-floating mb-4 me-2">
-												<select id="category" class="form-select" aria-label="Select post category" required>
-												</select>
-												<label for="category" class="form-label text-secondary">Category</label>
-											</div>
-										</div>
-										<div class="col-6">
-											<div class="mb-4 ms-2"></div>
-										</div>
-									</div>
-									<div class="d-flex flex-row">
-										<div class="col-6">
-											<div class="form-floating mb-4 me-2">
-												<input id="tags" class="form-control" aria-label="Tags" placeholder="Tags">
-												<label for="tags" class="form-label text-secondary">Tags</label>
-											</div>
-										</div>
-										<div class="col-6">
-											<div class="form-floating mb-4 ms-2">
-												<input id="keywords" class="form-control" aria-label="Keywords" placeholder="Keywords">
-												<label for="keywords" class="form-label text-secondary">Keywords</label>
-											</div>
-										</div>
-									</div>
-								<?php } ?>
-								<div class="form-floating col-12 mb-4">
-									<input id="title" class="form-control" aria-label="Title" placeholder="Title">
-									<label for="title" class="form-label text-secondary">Title</label>
-								</div>
-								<div class="form-floating col-12 mb-4">
-									<textarea id="content" class="form-control" aria-label="Content" placeholder="Content" style="resize: none; min-height: 98px"></textarea>
-									<label for="content" class="form-label text-secondary">Content</label>
-								</div>
-							</div>
-						</div>
-						<div class="col-3">
-							<div class="ms-3">
-								<p class="text-secondary fw-bold p-3">Attachments</p>
-								<div id="attachments-block" class="d-flex flex-column overflow-auto p-3 pt-1 gap-3" style="min-height:<?= $reply ? 132 : 296 ?>px; max-height: <?= $reply ? 132 : 296 ?>px">
-									<div id="attachment" class="col-12 rounded-3 visually-hidden shadow" style="min-height: 70px; background-color: #f9f9f9">
-										<div class="d-flex flex-row">
-											<div class="col-9">
-												<div class="m-2">
-													<p id="name" class="text-start text-dark text-truncate mb-0">template.pdf</p>
-													<p id="size" class="text-start text-secondary mb-0">1.2 MB</p>
-												</div>
-											</div>
-											<div class="col-3">
-												<div class="float-end">
-													<button id="remove" class="btn border-0 visually-hidden">
-														<i class="fa-solid fa-xmark fa-2xs bg-transparent"></i>
-													</button>
-													<div id="uploading" class="spinner-border spinner-border-sm text-theme m-2" role="status">
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-					<button id="upload" class="btn btn-theme me-2">Upload Attachment</button>
-					<button id="submit" class="btn btn-theme">
-						<span id="idle-submit">Create</span>
-						<span id="running-submit" class="visually-hidden spinner-border spinner-border-sm text-white" role="status"></span>
-					</button>
-				</div>
-			</div>
-		</div>
-		<script>
+		<div id="root"></div>
+	</body>
 
-			function loadCategories(token) {
-				$.ajax({
+	<script type="text/babel">
+		
+		class Create extends React.Component {
+
+			constructor() {
+				super();
+				this.state = {
+					categories: [],
+					attachments: []
+				}
+			}
+
+			async componentDidMount() {
+
+				const localStorage = window.localStorage;
+				const token = localStorage.getItem('token');
+
+				if (!token) {
+					window.location.href = '<?= base_url('/auth/login') ?>';
+					return;
+				}
+
+				const categories = [];
+
+				await $.ajax({
 					url: '<?= base_url('/posts/categories') ?>',
 					type: 'GET',
 					headers: {
@@ -96,9 +38,8 @@
 					},
 					success: function(data) {
 						data = $.parseJSON(data);
-						let categorySelect = $('select#category');
 						data.forEach(function(category) {
-							categorySelect.append(`<option value="${category.id}">${category.name}</option>`);
+							categories.push(category);
 						});
 					},
 					error: function(response) {
@@ -108,61 +49,74 @@
 						}
 					}
 				});
+
+				this.setState({ categories: categories });
 			}
+			
+			render() {
 
-			function loadInputs() {
-				$('#content').on('input', function() {
-					$(this).css('height', 'auto');
-					$(this).height(this.scrollHeight - 16);
-					$('#attachments-block').css('max-height', `${this.scrollHeight + <?= $reply ? 94 : 258 ?>}px`);
-				});
-			}
+				const uri_parent = uri['parent'];
+				const uri_category = uri['category'];
+				const reply = uri_parent || uri_category;
 
-			function formatMemory(bytes) {
-				const b = 1024;
-				const kb = b * 1024;
-				const mb = kb * 1024;
-				const gb = mb * 1024;
-				const tb = gb * 1024;
-				if (bytes < b) return bytes + ' B';
-				if (bytes < kb) return (bytes / b).toFixed(2) + ' KB';
-				if (bytes < mb) return (bytes / kb).toFixed(2) + ' MB';
-				if (bytes < gb) return (bytes / mb).toFixed(2) + ' GB';
-				if (bytes < tb) return (bytes / gb).toFixed(2) + ' TB';
-			}
+				function formatMemory(bytes) {
+					const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+					let unitIndex = 0;
+					while (bytes >= 1024 && unitIndex < units.length - 1) {
+						bytes /= 1024;
+						unitIndex++;
+					}
+					return bytes.toFixed(2) + ' ' + units[unitIndex];
+				}
 
-			function setupButtons() {
-				$('#upload').click(function() {
+				function handleInput(event) {
+					const target = $(event.target);
+					const ele = target[0];
+					target.css('height', 'auto');
+					target.height(ele.scrollHeight - 16);
+					$('#attachments').css('max-height', `${ele.scrollHeight + (reply ? 94 : 258)}px`);
+				}
 
-					let fileInput = $('<input type="file" class="attachment-upload visually-hidden" />');
-					$('body').append(fileInput);
-					fileInput.click();
+				async function handleUpload(event) {
+					const target = $(event.target);
+					let file = target.prop('files')[0];
 
-					fileInput.change(async function() {
-						let file = fileInput.prop('files')[0];
-						let attachment = $('#attachment').clone();
-						attachment.removeAttr('id');
-						attachment.find('#name').text(file.name);
-						attachment.find('#size').text(`${formatMemory(file.size)}`);
-						attachment.removeClass('visually-hidden');
-						attachment.find('#remove').click(function() {
-							attachment.remove();
-							fileInput.remove();
-						});
-						$('#attachments-block').append(attachment);
-						file.data = await file.arrayBuffer();
-						if (file.size > 1024 * 1024 * 8) {
-							alert('File size exceeds 8 MB');
-							attachment.remove();
-							fileInput.remove();
-							return;
-						}
-						attachment.find('#uploading').addClass('visually-hidden');
-						attachment.find('#remove').removeClass('visually-hidden');
+					target.val('');
 
-					});
-				});
-				$('#submit').click(function() {
+					if (file.size > 1024 * 1024 * 8) {
+						alert('File size exceeds 8 MB');
+						return;
+					}
+
+					const attachment = {
+						id: this.state.attachments.length,
+						name: file.name,
+						data: null,
+						size: file.size,
+						status: false
+					};
+
+					this.setState({ attachments: [...this.state.attachments, attachment] });
+
+					file.data = await file.arrayBuffer();
+
+					attachment.data = file.data;
+					attachment.status = true;
+
+					removeAttachment.bind(this)(attachment);
+
+					this.setState({ attachments: [...this.state.attachments, attachment]});
+				}
+
+				function removeAttachment(attachment) {
+					const index = this.state.attachments.indexOf(attachment);
+					if (index > -1) {
+						this.state.attachments.splice(index, 1);
+					}
+					this.setState({ attachments: this.state.attachments });
+				}
+
+				async function handleSubmit() {
 					const localStorage = window.localStorage;
 					const token = localStorage.getItem('token');
 					const category = $('#category').val();
@@ -170,34 +124,42 @@
 					const keywords = $('#keywords').val();
 					const title = $('#title').val();
 					const content = $('#content').val();
+					const attachments = this.state.attachments;
 
 					$('#idle-submit').addClass('visually-hidden');
 					$('#running-submit').removeClass('visually-hidden');
 
-					$.ajax({
+					let data = {
+						category: category,
+						tags: tags,
+						keywords: keywords,
+						title: title,
+						content: content
+					};
+
+					if (uri_parent) {
+						data.parent = uri_parent;
+					}
+
+					if (uri_category) {
+						data.category = uri_category;
+					}
+
+					await $.ajax({
 						url: '<?= base_url('/posts/create') ?>',
 						type: 'POST',
 						headers: {
 							'X-Token': token
 						},
-						data: {
-							category: <?= $category ?: 'category' ?>,
-							tags: tags,
-							keywords: keywords,
-							title: title,
-							content: content,
-							<?php if (isset($parent)) echo 'parent: ' . $parent; ?>
-						},
+						data: data,
 						success: async function(response) {
 							response = $.parseJSON(response);
 							if (response.status) {
 
 								const postId = response.id;
 
-								await $('.attachment-upload').each(async function () {
-									const file = $(this).prop('files')[0];
-									if (!file) return;
-									const buffer = new Uint8Array(file.data);
+								attachments.map(async attachment => {
+									const buffer = new Uint8Array(attachment.data);
 									const hex = Array.from(buffer).map(function(byte) {
 										return ('0' + (byte & 0xFF).toString(16)).slice(-2);
 									}).join('');
@@ -211,10 +173,10 @@
 										},
 										data: {
 											post: postId,
-											name: file.name,
-											size: file.size,
+											name: attachment.name,
+											size: attachment.size,
 											data: base64
-										}
+										},
 									});
 
 								});
@@ -222,8 +184,11 @@
 								$('#idle-submit').removeClass('visually-hidden');
 								$('#running-submit').addClass('visually-hidden');
 
-								<?php if ($parent) echo "window.location.href = '/posts/view/$parent'"; ?>
-								<?php if (!$parent) echo "window.location.href = '/posts/view/' + postId"; ?>;
+								if (uri_parent) {
+									window.location.href = '<?= base_url('/posts/view/') ?>' + uri_parent;
+								} else {
+									window.location.href = '<?= base_url('/posts/view/') ?>' + postId;
+								}
 							} else {
 								alert(response.message);
 								$('#idle-submit').removeClass('visually-hidden');
@@ -234,25 +199,117 @@
 							if (response.status === 401) {
 								localStorage.removeItem('token');
 								window.location.href = '<?= base_url('/auth/login') ?>';
+							} else {
+								alert('An error occurred');
+								$('#idle-submit').removeClass('visually-hidden');
+								$('#running-submit').addClass('visually-hidden');
 							}
 						}
 					});
-				})
-			}
-
-			$(document).ready(function() {
-				const localStorage = window.localStorage;
-				const token = localStorage.getItem('token');
-				if (!token) {
-					window.location.href = '<?= base_url('/auth/login') ?>';
-					return;
 				}
-				<?php if (!$reply) { ?>
-					loadCategories(token);
-				<?php } ?>
-				loadInputs();
-				setupButtons();
-			});
-		</script>
-	</body>
+
+				return (
+					<div className="container mt-5 mb-5">
+						<div role="form" className="card mt-5 mx-5 rounded-4 shadow border-0">
+							<input type="file" id="upload" className="visually-hidden" onInput={handleUpload.bind(this)}/>
+							<div className="card-header bg-white border-bottom-0 rounded-4">
+								<h4 className="card-title text-secondary mx-2 mt-3 fw-bold">Create a Post</h4>
+							</div>
+							<div className="card-body mx-2">
+								<div className="d-flex flex-row">
+									<div className="col-9">
+										<div className="me-4">
+											{!reply &&
+												<div>
+													<div className="d-flex flex-row">
+														<div className="col-6">
+															<div className="form-floating mb-4 me-2">
+																<select id="category" className="form-select" aria-label="Select post category" required>
+																	{this.state.categories.map(category => (
+																		<option value={category.id}>{category.name}</option>
+																	))}
+																</select>
+																<label htmlFor="category" className="form-label text-secondary">Category</label>
+															</div>
+														</div>
+														<div className="col-6">
+															<div className="mb-4 ms-2"></div>
+														</div>
+													</div>
+													<div className="d-flex flex-row">
+														<div className="col-6">
+															<div className="form-floating mb-4 me-2">
+																<input id="tags" className="form-control" aria-label="Tags" placeholder="Tags" />
+																<label htmlFor="tags" className="form-label text-secondary">Tags</label>
+															</div>
+														</div>
+														<div className="col-6">
+															<div className="form-floating mb-4 ms-2">
+																<input id="keywords" className="form-control" aria-label="Keywords" placeholder="Keywords" />
+																<label htmlFor="keywords" className="form-label text-secondary">Keywords</label>
+															</div>
+														</div>
+													</div>
+												</div>
+											}
+											<div className="form-floating col-12 mb-4">
+												<input id="title" className="form-control" aria-label="Title" placeholder="Title" />
+												<label htmlFor="title" className="form-label text-secondary">Title</label>
+											</div>
+											<div className="form-floating col-12 mb-4">
+                                        		<textarea id="content" className="form-control" aria-label="Content" placeholder="Content"
+														  style={{resize: "none", minHeight: "98px"}} onInput={handleInput}/>
+												<label htmlFor="content" className="form-label text-secondary">Content</label>
+											</div>
+										</div>
+									</div>
+									<div className="col-3" style={{display: this.state.attachments.length > 0 ? "block" : "none"}}>
+										<div className="ms-3">
+											<p className="text-secondary fw-bold p-3 pb-0">Attachments</p>
+											<div id="attachments" className="d-flex flex-column overflow-auto p-3 pt-1 gap-3" style={{ minHeight: reply ? 132 : 296, maxHeight: reply ? 132 : 296 }}>
+												{this.state.attachments.map(attachment => (
+													<div className="col-12 rounded-3" style={{ minHeight: 70, backgroundColor: "#f9f9f9" }}>
+														<div className="d-flex flex-row">
+															<div className="col-9">
+																<div className="m-2">
+																	<p className="text-start text-dark text-truncate mb-0">{attachment.name}</p>
+																	<p className="text-start text-secondary mb-0">{formatMemory(attachment.size)}</p>
+																</div>
+															</div>
+															<div className="col-3">
+																<div className="float-end">
+																	{
+																		!attachment.status ?
+																			<div className="spinner-border spinner-border-sm text-theme m-2" role="status"></div> :
+																			<button className="btn border-0" onClick={() => removeAttachment.bind(this)(attachment)}>
+																				<i className="fa-solid fa-xmark fa-2xs bg-transparent"></i>
+																			</button>
+																	}
+																</div>
+															</div>
+														</div>
+													</div>
+												))}
+											</div>
+										</div>
+									</div>
+								</div>
+								<button id="upload" className="btn btn-theme me-2" onClick={() => $('#upload').click()}>Upload Attachment</button>
+								<button id="submit" className="btn btn-theme" onClick={handleSubmit.bind(this)}>
+									<span id="idle-submit">Create</span>
+									<span id="running-submit" className="visually-hidden spinner-border spinner-border-sm text-white" role="status"></span>
+								</button>
+							</div>
+						</div>
+					</div>
+				)
+			}
+		}
+
+		ReactDOM.render(<Create />, document.getElementById('root'));
+		
+	</script>
+
 </html>
+		
+		

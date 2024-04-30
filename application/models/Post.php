@@ -113,7 +113,7 @@ class Post extends CI_Model
 			return ['status' => FALSE, 'message' => 'Missing required fields'];
 		}
 
-		$content = base64_encode($content);
+		$content = base64_encode(trim($content));
 
 		$uid = $user->id;
 		$now = date('Y-m-d H:i:s');
@@ -141,7 +141,7 @@ class Post extends CI_Model
 			'author' => $uid,
 			'category' => $category,
 			'keywords' => $keywords,
-			'title' => $title,
+			'title' => trim($title),
 			'content' => $content,
 			'parent' => $parent,
 			'created' => $now,
@@ -209,17 +209,20 @@ class Post extends CI_Model
 
 	function create_attachment($post_id, $name, $size, $data) {
 
-		$path = 'public/' . md5(uniqid(rand(), true));
+		$dir = 'public/attachments/';
+		$path = md5(uniqid(rand(), true));
 
-		while (file_exists($path)) {
-			$path = 'public/' . md5(uniqid(rand(), true));
+		while (file_exists($dir . $path)) {
+			$path = md5(uniqid(rand(), true));
 		}
+
+		$path = $dir . $path;
 
 		$data = base64_decode($data);
 		$data = hex2bin($data);
 		$this->db->insert('attachments', [
 			'post' => $post_id,
-			'name' => $name,
+			'name' => trim($name),
 			'size' => $size,
 			'path' => $path
 		]);

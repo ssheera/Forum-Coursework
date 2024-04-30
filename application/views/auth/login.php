@@ -28,7 +28,7 @@
 							if (response.status) {
 								const localStorage = window.localStorage;
 								localStorage.setItem('token', response.token);
-								window.location.href = '/';
+								window.location.href = '<?= base_url('/') ?>';
 							} else {
 								alert(response.message);
 							}
@@ -46,12 +46,12 @@
 									</div>
 									<div className="card-body mx-2">
 										<div className="form-floating mb-4">
-											<input type="text" className="form-control rounded-3" id="username" name="username" placeholder="Username" required />
-											<label for="username" className="form-label text-secondary">Username</label>
+											<input type="text" className="form-control rounded-3" id="username" name="username" placeholder="Username" aria-label="Username" required />
+											<label htmlFor="username" className="form-label text-secondary">Username</label>
 										</div>
 										<div className="form-floating mb-4">
-											<input type="password" className="form-control" id="password" name="password" placeholder="Password" required />
-											<label for="password" className="form-label text-secondary">Password</label>
+											<input type="password" className="form-control" id="password" name="password" placeholder="Password" aria-label="Password" required />
+											<label htmlFor="password" className="form-label text-secondary">Password</label>
 										</div>
 										<button type="submit" className="btn btn-theme w-100 bg-gradient bg-theme border-0 shadow" onClick={handleSubmit}>Login</button>
 									</div>

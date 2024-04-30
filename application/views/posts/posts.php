@@ -21,7 +21,7 @@
 				async componentDidMount() {
 					const categories = []
 					await $.ajax({
-						url: '/posts/categories',
+						url: '<?= base_url('/posts/categories') ?>',
 						type: 'GET',
 						success: function (data) {
 							data = $.parseJSON(data);
@@ -31,17 +31,26 @@
 						}
 					})
 
+					let headers = {
+						'X-Token': localStorage.getItem('token'),
+					};
+
+					const author = uri['author'];
+					const category = uri['category'];
+					const term = uri['term'];
+
+					if (author) headers['X-Filter-Author'] = author;
+					if (category) headers['X-Filter-Category'] = category;
+					if (term) headers['X-Filter-Term'] = term;
+
+					const data = []
+
 					for (let category of categories) {
 						const posts = []
 						await $.ajax({
-							url: '/posts/category/' + category.id,
+							url: '<?= base_url('/posts/category/') ?>' + category.id,
 							type: 'GET',
-							headers: {
-								'X-Token': localStorage.getItem('token'),
-								<?php if (isset($author)) echo "'X-Filter-Author': '$author',"; ?>
-								<?php if (isset($category)) echo "'X-Filter-Category': '$category',"; ?>
-								<?php if (isset($term)) echo "'X-Filter-Term': '$term',"; ?>
-							},
+							headers: headers,
 							success: function (data) {
 								data = $.parseJSON(data);
 								for (let post of data) {
@@ -52,10 +61,14 @@
 
 						if (posts.length === 0) continue;
 
-						this.setState({
-							data: [...this.state.data, {category: category, posts: posts}]
-						})
+						data.push({
+							category: category,
+							posts: posts
+						});
 					}
+
+					this.setState({data: data});
+
 				}
 
 				render() {
@@ -65,15 +78,15 @@
 					function handleSearch() {
 						const search = $('#searchBox').val();
 						if (search === '') return;
-						window.location.href = '/posts/search/' + search;
+						// TODO: Implement search
 					}
 
 					return (
 						<div className="d-flex flex-column" style={{marginBottom: '3rem'}}>
 							{ loggedIn &&
 								<div className="container d-flex flex-row gap-4">
-									<a href="/posts/author/self" style={{textDecoration: 'underline', textUnderlineOffset: '3px'}} className="nav-link text-dark mt-3">Your Posts</a>
-									<a href="/posts/create" style={{textDecoration: 'underline', textUnderlineOffset: '3px'}} className="nav-link text-dark mt-3">Create Post</a>
+									<a href="<?= base_url('/posts/author/self') ?>" style={{textDecoration: 'underline', textUnderlineOffset: '3px'}} className="nav-link text-dark mt-3">Your Posts</a>
+									<a href="<?= base_url('/posts/create') ?>" style={{textDecoration: 'underline', textUnderlineOffset: '3px'}} className="nav-link text-dark mt-3">Create Post</a>
 								</div>
 							}
 							<div className="container mt-4">
@@ -94,7 +107,7 @@
 										{ data.posts.map((post, index) => (
 											<div key={"post_" + index} className="border-0 h-auto p-2 bg-gradient"
 												 style={{cursor: 'pointer', background: index % 2 === 0 ? '#FFFFFF' : 'rgba(234, 232, 233)'}}
-												 onClick={() => window.location.href = '/posts/view/' + post.id}>
+												 onClick={() => window.location.href = '<?= base_url('/posts/view/') ?>' + post.id}>
 												<p className="text-dark fw-bold m-0 ps-3">{post.title}</p>
 												<p className="text-dark fst-italic m-0 ps-3" style={{fontSize: '0.9rem'}}>by {post.author}</p>
 												<div className="d-flex flex-row justify-content-between">

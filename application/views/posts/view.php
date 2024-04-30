@@ -10,8 +10,8 @@
 			if (localStorage.getItem('token')) {
 				document.write(`
 				<div class="container d-flex flex-row gap-4">
-					<a href="/posts/author/self" style="text-decoration: underline; text-underline-offset: 3px" class="nav-link text-dark mt-3">Your Posts</a>
-					<a href="/posts/create" style="text-decoration: underline; text-underline-offset: 3px" class="nav-link text-dark mt-3">Create Post</a>
+					<a href="<?= base_url('/posts/author/self') ?>" style="text-decoration: underline; text-underline-offset: 3px" class="nav-link text-dark mt-3">Your Posts</a>
+					<a href="<?= base_url('/posts/create') ?>" style="text-decoration: underline; text-underline-offset: 3px" class="nav-link text-dark mt-3">Create Post</a>
 				</div>`);
 			}
 		</script>
@@ -72,7 +72,7 @@
 			}
 
 			function createPost(response) {
-				const viewing = <?= $post_id ?>;
+				const viewing = uri['view'];
 				const template = $('#post').clone().removeClass('visually-hidden');
 				const title = template.find('#title');
 				title.text(response.title);
@@ -97,15 +97,15 @@
 				const reply = template.find('#reply');
 
 				edit.click(function() {
-					window.location.href = '/posts/edit/' + response.id;
+					window.location.href = '<?= base_url('/posts/edit/') ?>' + response.id;
 				});
 				reply.click(function() {
-					window.location.href = '/posts/create/parent/' + response.id + '/category/' + response.category;
+					window.location.href = '<?= base_url('/posts/create/parent/') ?>' + response.id + '/category/' + response.category;
 				});
 				del.click(function() {
 					const post = response;
 					$.ajax({
-						url: '<?= base_url('/posts/post/') ?>' + response.id,
+						url: '<?= base_url('/posts/post/') ?>' + post.id,
 						type: 'DELETE',
 						headers: {
 							'X-Token': localStorage.getItem('token')
@@ -114,9 +114,13 @@
 							response = $.parseJSON(response);
 							if (response.status) {
 								if (post.parent === null) {
-									window.location.href = '/posts';
+									window.location.href = '<?= base_url('/posts/') ?>';
 								} else {
-									window.location.href = '/posts/view/' + viewing;
+									if (viewing === post.id) {
+										window.location.href = '<?= base_url('/posts/view/') ?>' + post.parent;
+									} else {
+										window.location.href = '<?= base_url('/posts/view/') ?>' + viewing;
+									}
 								}
 							} else {
 								alert(response.message);
@@ -147,7 +151,7 @@
 
 				template.attr('id', 'post-' + response.id);
 				title.click(function() {
-					window.location.href = '/posts/view/' + response.id;
+					window.location.href = '<?= base_url('/posts/view/') ?>' + response.id;
 				});
 				title.css('cursor', 'pointer');
 				return template;
@@ -171,7 +175,7 @@
 							thread.removeClass('visually-hidden');
 							thread.css('cursor', 'pointer');
 							thread.click(function() {
-								window.location.href = '/posts/view/' + current.parent;
+								window.location.href = '<?= base_url('/posts/view/') ?>' + current.parent;
 							});
 						} else {
 							const holder = $('#post-' + current.parent);
@@ -189,10 +193,10 @@
 			}
 
 			$(document).ready(async function() {
-				const postId = <?= $post_id ?>;
+				const postId = uri['view'];
 
 				if (!postId) {
-					window.location.href = '/posts';
+					window.location.href = '<?= base_url('/posts') ?>';
 					return;
 				}
 

@@ -23,7 +23,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = 'http://localhost/';
+
+if (ENVIRONMENT === 'production') {
+	$config['base_url'] = 'https://w1821783.users.ecs.westminster.ac.uk/ciapp/index.php/';
+} else {
+	$config['base_url'] = 'http://localhost/';
+}
 // $config['base_url'] = 'https://courtes.users.ecs.westminster.ac.uk/ciapp/';
 
 /*

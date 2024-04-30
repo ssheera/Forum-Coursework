@@ -19,23 +19,12 @@ class Posts extends RestController
 
 	public function index_get()
 	{
-
-		$args = $this->uri->uri_to_assoc(2);
-
-		$category = isset($args['category']) ? $args['category'] : NULL;
-		$author = isset($args['author']) ? $args['author'] : NULL;
-
-		$this->load->view('posts/posts', ['category' => $category, 'author' => $author]);
+		$this->load->view('posts/posts');
 	}
 
 	public function create_get()
 	{
-		$args = $this->uri->uri_to_assoc(3);
-
-		$parent = isset($args['parent']) ? $args['parent'] : NULL;
-		$category = isset($args['category']) ? $args['category'] : NULL;
-
-		$this->load->view('posts/create', ['reply' => $parent || $category, 'parent' => $parent, 'category' => $category]);
+		$this->load->view('posts/create');
 	}
 
 	public function create_post()
@@ -118,7 +107,7 @@ class Posts extends RestController
 
 	public function view_get()
 	{
-		$this->load->view('posts/view', ['post_id' => $this->uri->segment(3)]);
+		$this->load->view('posts/view');
 	}
 
 	public function post_get() {
@@ -162,6 +151,8 @@ class Posts extends RestController
 		$data = $this->input->post('data');
 
 		$this->Post->create_attachment($post_id, $name, $size, $data);
+
+		echo json_encode(['status' => TRUE]);
 	}
 
 }

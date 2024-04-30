@@ -26,7 +26,7 @@
 						.then(response => response.json())
 						.then(data => {
 							if (data.status) {
-								window.location.href = '/auth/login';
+								window.location.href = '<?= base_url('/auth/login') ?>';
 							} else {
 								alert(data.message);
 							}
@@ -43,16 +43,16 @@
 										</div>
 										<div className="card-body mx-2">
 											<div className="form-floating mb-4">
-												<input type="text" className="form-control rounded-3" id="username" name="username" placeholder="Username" required />
-												<label for="username" className="form-label text-secondary">Username</label>
+												<input type="text" className="form-control rounded-3" id="username" name="username" placeholder="Username" aria-label="Username" required />
+												<label htmlFor="username" className="form-label text-secondary">Username</label>
 											</div>
 											<div className="form-floating mb-4">
-												<input type="email" className="form-control rounded-3" id="email" name="email" placeholder="Email" required />
-												<label for="email" className="form-label text-secondary">Email</label>
+												<input type="email" className="form-control rounded-3" id="email" name="email" placeholder="Email" aria-label="Email" required />
+												<label htmlFor="email" className="form-label text-secondary">Email</label>
 											</div>
 											<div className="form-floating mb-4">
-												<input type="password" className="form-control" id="password" name="password" placeholder="Password" required />
-												<label for="password" className="form-label text-secondary">Password</label>
+												<input type="password" className="form-control" id="password" name="password" placeholder="Password" aria-label="Password" required />
+												<label htmlFor="password" className="form-label text-secondary">Password</label>
 											</div>
 											<button type="button" className="btn btn-theme w-100 bg-gradient bg-theme border-0 shadow" onClick={handleSubmit}>Register</button>
 										</div>
