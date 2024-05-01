@@ -209,7 +209,8 @@ class Post extends CI_Model
 
 	function create_attachment($post_id, $name, $size, $data) {
 
-		$dir = 'public/attachments/';
+		$config = get_instance()->config;
+		$dir = $config->slash_item('assets_url') . 'attachments/';
 		$path = md5(uniqid(rand(), true));
 
 		while (file_exists($dir . $path)) {

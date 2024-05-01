@@ -36,7 +36,6 @@ class Auth extends RestController {
 
 	public function register_post()
 	{
-		// Get post data, username, email, and password
 		$username = $this->input->post('username');
 		$email = $this->input->post('email');
 		$password = $this->input->post('password');

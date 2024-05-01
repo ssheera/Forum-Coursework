@@ -158,7 +158,7 @@
 
 								const postId = response.id;
 
-								attachments.map(async attachment => {
+								for (const attachment in attachments) {
 									const buffer = new Uint8Array(attachment.data);
 									const hex = Array.from(buffer).map(function(byte) {
 										return ('0' + (byte & 0xFF).toString(16)).slice(-2);
@@ -178,8 +178,7 @@
 											data: base64
 										},
 									});
-
-								});
+								}
 
 								$('#idle-submit').removeClass('visually-hidden');
 								$('#running-submit').addClass('visually-hidden');

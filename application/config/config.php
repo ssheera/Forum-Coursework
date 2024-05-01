@@ -26,8 +26,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 if (ENVIRONMENT === 'production') {
 	$config['base_url'] = 'https://w1821783.users.ecs.westminster.ac.uk/ciapp/index.php/';
+	$config['assets_url'] = 'https://w1821783.users.ecs.westminster.ac.uk/assets/';
 } else {
-	$config['base_url'] = 'http://localhost/';
+	$config['assets_url'] = 'http://localhost/assets/';
+	$config['base_url'] = 'http://localhost/public/';
 }
 // $config['base_url'] = 'https://courtes.users.ecs.westminster.ac.uk/ciapp/';
 
@@ -41,7 +43,7 @@ if (ENVIRONMENT === 'production') {
 | variable so that it is blank.
 |
 */
-$config['index_page'] = 'index.php';
+$config['index_page'] = '';
 
 /*
 |--------------------------------------------------------------------------
@@ -243,7 +245,7 @@ $config['log_threshold'] = 2;
 |
 */
 // $config['log_path'] = '/Applications/MAMP/htdocs/6cosc005w/ciapp/application/logs/';
-$config['log_path'] = '/Applications/MAMP/htdocs/6cosc022w/cirest/application/logs/';
+$config['log_path'] = '';
 
 /*
 |--------------------------------------------------------------------------
