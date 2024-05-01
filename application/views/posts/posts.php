@@ -54,7 +54,8 @@
 							success: function (data) {
 								data = $.parseJSON(data);
 								for (let post of data) {
-									posts.push(post);
+									if (post.parent === null)
+										posts.push(post);
 								}
 							}
 						})

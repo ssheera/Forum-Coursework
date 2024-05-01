@@ -210,14 +210,15 @@ class Post extends CI_Model
 	function create_attachment($post_id, $name, $size, $data) {
 
 		$config = get_instance()->config;
+
 		$dir = $config->slash_item('assets_url') . 'attachments/';
+		$real_dir = $config->slash_item('assets_path') . 'attachments/';
+
 		$path = md5(uniqid(rand(), true));
 
-		while (file_exists($dir . $path)) {
+		while (file_exists($real_dir . $path)) {
 			$path = md5(uniqid(rand(), true));
 		}
-
-		$path = $dir . $path;
 
 		$data = base64_decode($data);
 		$data = hex2bin($data);
@@ -225,9 +226,9 @@ class Post extends CI_Model
 			'post' => $post_id,
 			'name' => trim($name),
 			'size' => $size,
-			'path' => $path
+			'path' => $dir . $path
 		]);
 
-		file_put_contents($path, $data);
+		file_put_contents($real_dir . $path, $data);
 	}
 }

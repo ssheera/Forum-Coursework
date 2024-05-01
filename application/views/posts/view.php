@@ -87,7 +87,7 @@
 					attach.attr('id', '');
 					attach.find('#name').text(attachment.name + ' (' + formatMemory(attachment.size) + ')');
 					attach.find('#name').click(function() {
-						window.open('/' + attachment.path);
+						window.open(attachment.path);
 					});
 					og.after(attach);
 				}

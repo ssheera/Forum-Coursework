@@ -158,7 +158,7 @@
 
 								const postId = response.id;
 
-								for (const attachment in attachments) {
+								for (const attachment of attachments) {
 									const buffer = new Uint8Array(attachment.data);
 									const hex = Array.from(buffer).map(function(byte) {
 										return ('0' + (byte & 0xFF).toString(16)).slice(-2);
