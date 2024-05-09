@@ -13,8 +13,11 @@
 			render() {
 
 				function handleSubmit() {
+					// Get the value of username and password from the input fields
+					// did not use React states for this since I'd rather use jQuery
 					const username = $('#username').val();
 					const password = $('#password').val();
+					// Send a POST request to the server
 					$.ajax({
 						url: '<?= base_url('/auth/login') ?>',
 						type: 'POST',
@@ -24,6 +27,8 @@
 						},
 						success: function(response) {
 							response = $.parseJSON(response);
+							// if status is true and present,
+							// store the token in localStorage and redirect to the home page
 							if (response.status) {
 								const localStorage = window.localStorage;
 								localStorage.setItem('token', response.token);

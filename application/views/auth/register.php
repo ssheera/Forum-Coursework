@@ -13,9 +13,11 @@
 				render() {
 
 					function handleSubmit() {
+						// Get the username, email, and password from the input fields
 						const username = $('#username').val();
 						const email = $('#email').val();
 						const password = $('#password').val();
+						// Send the data to the server using AJAX
 						$.ajax({
 							url: '<?= base_url('/auth/register') ?>',
 							type: 'POST',
@@ -26,6 +28,7 @@
 							},
 							success: function(response) {
 								response = $.parseJSON(response);
+								// if status is true, redirect to the login page
 								if (response.status) {
 									window.location.href = '<?= base_url('/auth/login') ?>';
 								} else {

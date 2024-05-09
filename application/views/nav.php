@@ -6,7 +6,8 @@
 
 		render() {
 
-			const loggedIn = window.localStorage.getItem('token') !== null;
+			// get token from local storage
+			const token = window.localStorage.getItem('token');
 
 			return (
 				<>
@@ -20,7 +21,8 @@
 							<div className="navbar-nav w-100 d-flex justify-content-between">
 								<a className={"nav-link ps-0"} href="<?= base_url('/') ?>">Home</a>
 								{
-									loggedIn ?
+									// if the token is available, show logout button, otherwise show register and login button
+									token ?
 										<div className="d-flex flex-row">
 											<a className="nav-link" href="<?= base_url('/auth/logout') ?>">Logout</a>
 										</div> :

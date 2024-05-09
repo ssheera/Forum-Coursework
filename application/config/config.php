@@ -29,9 +29,9 @@ if (ENVIRONMENT === 'production') {
 	$config['assets_path'] = '/home/student/783/w1821783/public_html/assets/';
 	$config['assets_url'] = 'https://w1821783.users.ecs.westminster.ac.uk/assets';
 } else {
-	$config['assets_url'] = 'http://localhost/assets/';
+	$config['assets_url'] = 'http://localhost/public/assets/';
 	$config['assets_path'] = 'C:/Users/sande/Desktop/Coursework/serverside2/codeignite/public/assets/';
-	$config['base_url'] = 'http://localhost/public/';
+	$config['base_url'] = 'http://localhost/';
 }
 // $config['base_url'] = 'https://courtes.users.ecs.westminster.ac.uk/ciapp/';
 

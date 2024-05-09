@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-	<?php $this->load->view('head', ['title' => 'Create Post']); ?>
+	<?php $this->load->view('head', ['title' => 'Edit Post']); ?>
 	<body>
 		<?php $this->load->view('nav'); ?>
 		<div id="root"></div>
@@ -8,15 +8,19 @@
 
 	<script type="text/babel">
 		
-		class Create extends React.Component {
+		class Edit extends React.Component {
 
 			constructor() {
 				super();
-				// state contains categories and attachments
-				// attachments are held after uploading and before submitting
+				// set the state with the attachments, title, content and keywords
+				// savedAttachments is a copy of the attachments to be used for comparison
+				// so that we can delete attachments that are not in the state
 				this.state = {
-					categories: [],
-					attachments: []
+					attachments: [],
+					savedAttachments: [],
+					title: '',
+					content: '',
+					keywords: ''
 				}
 			}
 
@@ -32,46 +36,70 @@
 					return;
 				}
 
-				// if the post is a reply, i.e. a parent post is set in the url, we don't need
-				// to grab the categories, the server will autofill it
-				if (uri['parent'])
+				// check if post id is set in the uri
+				if (!uri['edit']) {
+					window.location.href = '<?= base_url('/posts') ?>';
 					return;
+				}
 
-				// variable to hold categories
-				const categories = [];
+				// create the data object, this goes into the state
+				const data = {
+					title: '',
+					content: '',
+					keywords: '',
+					attachments: []
+				}
 
+				// send GET request and request information about the post
+				// such as title, content, keywords and attachments
 				await $.ajax({
-					url: '<?= base_url('/posts/categories') ?>',
+					url: '<?= base_url('/posts/post/') ?>' + uri['edit'],
 					type: 'GET',
 					headers: {
-						// adding token to headers, so we can get only
-						// the categories that the user has access to
-						'X-Token': token
+						'X-Token': localStorage.getItem('token')
 					},
-					success: function(data) {
-						data = $.parseJSON(data);
-						data.forEach(function(category) {
-							categories.push(category);
-						});
+					success: async function (response) {
+						response = $.parseJSON(response);
+						// set the document title to the post title
+						document.title = "Editing - " + response.title;
+						// get the title, content and keywords from the response
+						data.title = response.title;
+						data.content = response.content;
+						data.keywords = response.keywords;
+						// interpret the attachments from the response
+						for (const attachment of response.attachments) {
+							const file = {
+								// These attachments have an id to specify that they already exist on server
+								id: attachment.id,
+								name: attachment.name,
+								size: attachment.size,
+								file: null
+							}
+							data.attachments.push(file);
+						}
 					},
 					error: function(response) {
-						if (response.status === 401) {
-							// 401 is unauthorized, so we remove the invalid token and redirect to login
-							localStorage.removeItem('token');
-							window.location.href = '<?= base_url('/auth/login') ?>';
-						}
+						alert('Error fetching post')
 					}
 				});
 
-				// populate the categories in the state
-				this.setState({ categories: categories });
+				// set the state with the data
+				// savedAttachments is a copy of the attachments to be used for comparison
+				this.setState({ title: data.title, content: data.content, keywords: data.keywords,
+					attachments: data.attachments,
+					savedAttachments: data.attachments.map(attachment => attachment)});
+
+				// clone of handleInput
+				// get the textarea element and resize the textarea with the attachments container
+				const target = $('textarea');
+				const ele = target[0];
+				target.css('height', 'auto');
+				target.height(ele.scrollHeight - 16);
+				$('#attachments').css('max-height', `${ele.scrollHeight + 258}px`);
+
 			}
 			
 			render() {
-
-				// the parent post id, if set, the post is a reply
-				const post_parent = uri['parent'];
-				const reply = !!post_parent;
 
 				// function to format memory size
 				function formatMemory(bytes) {
@@ -147,18 +175,17 @@
 					this.setState({ attachments: this.state.attachments });
 				}
 
-				// function to handle submit, this will send the post data to the server
-				// and upload attachments
+				// function to handle saving the post
 				async function handleSubmit() {
 					// Get the token, category, keywords, title, content and attachments
 					const token = window.localStorage.getItem('token');
-					const category = $('#category').val();
 					const keywords = $('#keywords').val();
 					const title = $('#title').val();
 					const content = $('#content').val();
 					const attachments = this.state.attachments;
+					const savedAttachments = this.state.savedAttachments;
 
-					// Get spinner components
+					// Get the spinner components and buttons
 					const idleSubmit = $('#idle-submit');
 					const runningSubmit = $('#running-submit');
 
@@ -170,20 +197,13 @@
 					let data = {
 						keywords: keywords,
 						title: title,
-						content: content
+						content: content,
 					};
 
-					// Calculate whether to send the parent or category
-					// since it is calculated if the post is a reply
-					if (uri['parent']) {
-						data.parent = uri['parent'];
-					} else {
-						data.category = category;
-					}
-
-					// send the post data to the server
+					// send POST data to the server at /edit/<id>
+					// outcome should update the post
 					await $.ajax({
-						url: '<?= base_url('/posts/create') ?>',
+						url: '<?= base_url('/posts/edit/') ?>' + uri['edit'],
 						type: 'POST',
 						headers: {
 							'X-Token': token
@@ -191,9 +211,30 @@
 						data: data,
 						success: async function(response) {
 							response = $.parseJSON(response);
+							// the edit process was successful
 							if (response.status) {
-								// post has been successfully created, get the post id
-								const postId = response.id;
+								// check if there were any attachments originally with the post
+								if (savedAttachments.length > 0) {
+									// if there were, check if any attachments were removed
+									const toDelete = savedAttachments.filter(savedAttachment => {
+										return !attachments.some(attachment => attachment.id === savedAttachment.id);
+									});
+									// of those attachments, delete them
+									// send DELETE to /attach/<attachment id>
+									// server automatically locates the post and deletes the attachment
+									for (const attachment of toDelete) {
+										await $.ajax({
+											url: '<?= base_url('/posts/attach/') ?>' + attachment.id,
+											type: 'DELETE',
+											headers: {
+												'X-Token': token
+											},
+											data: {
+												id: attachment.id
+											}
+										});
+									}
+								}
 								// loop through the attachments and upload them
 								// create formData to upload files efficiently
 								const formData = new FormData();
@@ -202,7 +243,7 @@
 
 								// send POST to attach/<id> to upload the attachments
 								await $.ajax({
-									url: '<?= base_url('/posts/attach/') ?>' + postId,
+									url: '<?= base_url('/posts/attach/') ?>' + uri['edit'],
 									type: 'POST',
 									processData: false,
 									contentType: false,
@@ -211,30 +252,26 @@
 									},
 									data: formData,
 								});
-
-								// redirect to the post view
-								if (post_parent) {
-									// if the post is a reply, redirect to the parent post
-									window.location.href = '<?= base_url('/posts/view/') ?>' + post_parent;
-								} else {
-									// if the post is not a reply, redirect to the post
-									window.location.href = '<?= base_url('/posts/view/') ?>' + postId;
-								}
+								// go back to the post view
+								window.location.href = '<?= base_url('/posts/view/') ?>' + uri['edit'];
 							} else {
+								// alert the error message
 								alert(response.message);
 							}
 						},
 						error: function(response) {
+							// in case of 401, invalid token, redirect to login
 							if (response.status === 401) {
 								localStorage.removeItem('token');
 								window.location.href = '<?= base_url('/auth/login') ?>';
 							} else {
+								// else, alert an error occurred
 								alert('An error occurred');
 							}
 						}
 					});
 
-					// Everything uploaded and sent, remove the spinner
+					// Everything is done, remove spinner from submit button
 					idleSubmit.removeClass('visually-hidden');
 					runningSubmit.addClass('visually-hidden');
 				}
@@ -244,7 +281,7 @@
 						<div role="form" className="card mt-5 mx-5 rounded-4 shadow border-0">
 							<input type="file" id="upload" className="visually-hidden" onInput={handleUpload.bind(this)}/>
 							<div className="card-header bg-white border-bottom-0 rounded-4">
-								<h4 className="card-title text-secondary mx-2 mt-3 fw-bold">Create Post</h4>
+								<h4 className="card-title text-secondary mx-2 mt-3 fw-bold">Edit Post</h4>
 							</div>
 							<div className="card-body mx-2">
 								<div className="d-flex flex-row">
@@ -254,10 +291,7 @@
 												<div className="d-flex flex-row">
 													<div className="col-6">
 														<div className="form-floating mb-4 me-2">
-															<select id="category" className="form-select" aria-label="Category" disabled={reply} required={!reply}>
-																{this.state.categories.map(category => (
-																	<option value={category.id}>{category.name}</option>
-																))}
+															<select id="category" className="form-select" aria-label="Category" disabled>
 															</select>
 															<label htmlFor="category" className="form-label text-secondary">Category</label>
 														</div>
@@ -268,20 +302,23 @@
 												</div>
 												<div className="d-flex flex-row">
 													<div className="col-6">
-														<div className="form-floating me-2 mb-4">
-															<input id="keywords" className="form-control" aria-label="Keywords" placeholder="Keywords"/>
+														<div className="form-floating mb-4 me-2">
+															<input id="keywords" className="form-control" aria-label="Keywords" placeholder="Keywords"
+																   defaultValue={this.state.keywords} />
 															<label htmlFor="keywords" className="form-label text-secondary">Keywords</label>
 														</div>
 													</div>
 												</div>
 											</div>
 											<div className="form-floating col-12 mb-4">
-												<input id="title" className="form-control" aria-label="Title" placeholder="Title" />
+												<input id="title" className="form-control" aria-label="Title" placeholder="Title" defaultValue={this.state.title} />
 												<label htmlFor="title" className="form-label text-secondary">Title</label>
 											</div>
 											<div className="form-floating col-12 mb-4">
                                         		<textarea id="content" className="form-control" aria-label="Content" placeholder="Content"
-														  style={{resize: "none", minHeight: "98px"}} onInput={handleInput}/>
+														  style={{resize: "none", minHeight: "98px"}}
+														  onInput={handleInput}
+														  defaultValue={this.state.content}/>
 												<label htmlFor="content" className="form-label text-secondary">Content</label>
 											</div>
 										</div>
@@ -315,7 +352,7 @@
 								</div>
 								<button className="btn btn-theme me-2" onClick={() => $('#upload').click()}>Upload Attachment</button>
 								<button className="btn btn-theme" onClick={handleSubmit.bind(this)}>
-									<span id="idle-submit">Create</span>
+									<span id="idle-submit">Save</span>
 									<span id="running-submit" className="visually-hidden spinner-border spinner-border-sm text-white" role="status"></span>
 								</button>
 							</div>
@@ -325,7 +362,7 @@
 			}
 		}
 
-		ReactDOM.render(<Create />,  $('#root')[0]);
+		ReactDOM.render(<Edit />,  $('#root')[0]);
 		
 	</script>
 
