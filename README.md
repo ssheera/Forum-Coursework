@@ -1,5 +1,5 @@
 # Forum-Coursework
-University coursework developed during my final year, using PHP and JavaScript
+University coursework developed during my final year, using CodeIgniter with a React.js front-end framework.
 
 ## Description
 This project was developed during my final year at university. The project was developed using PHP and JavaScript. It's a simple forums website where you can create and reply to posts.
