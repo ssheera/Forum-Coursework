@@ -95,14 +95,10 @@ $db['default'] = array(
 	'save_queries' => TRUE
 );
 
-if (ENVIRONMENT === 'production') {
-	$db['default']['hostname'] = 'phpmyadmin.ecs.westminster.ac.uk';
-	$db['default']['username'] = 'w1821783';
-	$db['default']['password'] = 'eEqs5X1XsWf5';
-	$db['default']['database'] = 'w1821783_0';
-} else {
-	$db['default']['hostname'] = 'localhost';
-	$db['default']['username'] = 'root';
-	$db['default']['password'] = 'root';
-	$db['default']['database'] = 'application';
-}
+
+// TODO, Change the database configuration to your own
+$db['default']['hostname'] = 'localhost';
+$db['default']['username'] = 'root';
+$db['default']['password'] = 'root';
+$db['default']['database'] = 'application';
+
